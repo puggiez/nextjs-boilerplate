@@ -1,16 +1,15 @@
 const express = require('express');
 const app = express();
 
-app.use(express.json()); // parse JSON bodies
+app.use(express.json());
 
 // In-memory table to store player data
 let playerDataTable = [];
 
-// POST endpoint to add/update player data
-app.post('/api/update', (req, res) => {
+// POST endpoint: /update
+app.post('/update', (req, res) => {
   const playerData = req.body;
 
-  // Basic validation
   if (
     !playerData.username ||
     !Array.isArray(playerData.cframe) || playerData.cframe.length !== 12 ||
@@ -20,7 +19,6 @@ app.post('/api/update', (req, res) => {
     return res.status(400).json({ error: 'Invalid player data format' });
   }
 
-  // Check if player exists already, update if yes
   const existingIndex = playerDataTable.findIndex(p => p.username === playerData.username);
 
   if (existingIndex !== -1) {
@@ -32,8 +30,8 @@ app.post('/api/update', (req, res) => {
   res.json({ status: 'player data updated', totalPlayers: playerDataTable.length });
 });
 
-// Optional GET endpoint to retrieve all player data
-app.get('/api/data', (req, res) => {
+// GET endpoint: /data
+app.get('/data', (req, res) => {
   res.json(playerDataTable);
 });
 
@@ -43,7 +41,6 @@ setInterval(() => {
   console.log('Player data table reset');
 }, 250);
 
-// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
