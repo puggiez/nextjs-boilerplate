@@ -3,39 +3,48 @@ const app = express();
 
 app.use(express.json());
 
-// In-memory table to store player data
+// In-memory player data store
 let playerDataTable = [];
 
-// POST endpoint: /update
+// POST /update — receives an array of player objects
 app.post('/update', (req, res) => {
-  const playerData = req.body;
+  const playerArray = req.body;
 
-  if (
-    !playerData.username ||
-    !Array.isArray(playerData.cframe) || playerData.cframe.length !== 12 ||
-    !playerData.velocity || typeof playerData.velocity.x !== 'number' ||
-    typeof playerData.velocity.y !== 'number' || typeof playerData.velocity.z !== 'number'
-  ) {
-    return res.status(400).json({ error: 'Invalid player data format' });
+  if (!Array.isArray(playerArray)) {
+    return res.status(400).json({ error: 'Expected an array of player data' });
   }
 
-  const existingIndex = playerDataTable.findIndex(p => p.username === playerData.username);
+  for (const playerData of playerArray) {
+    if (
+      !playerData.username ||
+      !Array.isArray(playerData.cframe) || playerData.cframe.length !== 12 ||
+      !playerData.velocity ||
+      typeof playerData.velocity.x !== 'number' ||
+      typeof playerData.velocity.y !== 'number' ||
+      typeof playerData.velocity.z !== 'number'
+    ) {
+      return res.status(400).json({ error: 'Invalid player data format in array' });
+    }
 
-  if (existingIndex !== -1) {
-    playerDataTable[existingIndex] = playerData;
-  } else {
-    playerDataTable.push(playerData);
+    // Update existing player data or add new
+    const index = playerDataTable.findIndex(p => p.username === playerData.username);
+
+    if (index !== -1) {
+      playerDataTable[index] = playerData;
+    } else {
+      playerDataTable.push(playerData);
+    }
   }
 
   res.json({ status: 'player data updated', totalPlayers: playerDataTable.length });
 });
 
-// GET endpoint: /data
+// GET /data — return current player data
 app.get('/data', (req, res) => {
   res.json(playerDataTable);
 });
 
-// Reset the player data table every 0.25 seconds
+// Reset player data every 0.25 seconds
 setInterval(() => {
   playerDataTable = [];
   console.log('Player data table reset');
